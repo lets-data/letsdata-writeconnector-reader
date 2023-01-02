@@ -56,16 +56,25 @@ $ > aws iam attach-user-policy --policy-arn arn:aws:iam:<ACCOUNT-ID>:aws:policy/
 ```
 
 ## How to Run this Code
-The CLI driver code (```Main.java```) uses the Kinesis Reader and the STS Util from earlier to implement the following CLI commands:
+* Build the jar by using the following maven commands - this should create a ```letsdata-writeconnector-reader-1.0-SNAPSHOT-jar-with-dependencies.jar``` in the target folder:
 ```
+$ > cd <github project root>
+$ > mvn clean compile assembly:single 
+```
+* Run the ```letsdatawriteconnector.sh``` file in the bin folder. You may need to update the jar path as needed. 
+* The CLI driver code (```Main.java```) uses the Kinesis Reader and the STS Util from earlier to implement the following CLI commands:
+```
+# cd into the bin directory
+$ > cd src/bin
+
 # awsAccessKeyId and awsSecretKey are the security credentials of an IAM User in the customer AWS account. This is the customer AWS account that was granted access. In case this is a root account, you can create an IAM user. See the "IAM User With AdministratorAccess" section above.
 
 # Given a streamName, list shards for the stream
-$ > letsdatawriteconnector listShards --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey'
+$ > letsdatawriteconnector.sh listShards --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey'
 
 # Given a shardId, get the Shard Iterator
-$ > letsdatawriteconnector getShardIterator --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardId 'shardId'
+$ > letsdatawriteconnector.sh getShardIterator --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardId 'shardId'
 
 # Given a shardIterator, get the records from the stream
-$ > letsdatawriteconnector getRecords --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardIterator 'shardIterator'
+$ > letsdatawriteconnector.sh getRecords --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardIterator 'shardIterator'
 ```
