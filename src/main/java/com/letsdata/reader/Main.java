@@ -1,6 +1,7 @@
 package com.letsdata.reader;
 
 import com.amazonaws.services.kinesis.model.GetRecordsResult;
+import com.amazonaws.services.kinesis.model.Record;
 import com.amazonaws.services.kinesis.model.Shard;
 import com.amazonaws.services.kinesis.model.ShardIteratorType;
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -9,7 +10,12 @@ import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 import software.amazon.awssdk.utils.StringUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class Main {
 
@@ -48,7 +54,7 @@ public class Main {
                     "                \"kinesis:GetShardIterator\",\n" +
                     "                \"kinesis:GetRecords\"\n" +
                     "            ],\n" +
-                    "            \"Resource\": \"arn:aws:kinesis:"+region+":223413462631:stream/"+streamName+"\"\n" +
+                    "            \"Resource\": \"arn:aws:kinesis:" + region + ":223413462631:stream/" + streamName + "\"\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"Effect\": \"Allow\",\n" +
@@ -58,26 +64,32 @@ public class Main {
                     "    ]\n" +
                     "}";
 
-            String roleSessionName = streamName+System.currentTimeMillis();
-            KinesisReader kinesisReader = new KinesisReader(region, stsUtil, customerAccessRoleArn, roleAccessPolicyText,roleSessionName, null);
-            switch(action) {
+            String roleSessionName = streamName + System.currentTimeMillis();
+            KinesisReader kinesisReader = new KinesisReader(region, stsUtil, customerAccessRoleArn, roleAccessPolicyText, roleSessionName, null);
+            switch (action) {
                 case "listShards": {
                     List<Shard> shardList = kinesisReader.listShards(streamName, null, null);
                     System.out.println(shardList);
                     break;
                 }
-                case "getShardIterator" : {
+                case "getShardIterator": {
                     String shardIterator = kinesisReader.getShardIterator(streamName, namespace.getString("shardId"), ShardIteratorType.TRIM_HORIZON, null, null);
                     System.out.println(shardIterator);
                     break;
                 }
-                case "getRecords" : {
+                case "getRecords": {
                     GetRecordsResult getRecordsResult = kinesisReader.getRecords(null, namespace.getString("shardIterator"));
-                    System.out.println(getRecordsResult);
+                    List<Record> recordList = getRecordsResult.getRecords();
+                    for (Record record : recordList) {
+                        byte[] dataBytes = record.getData().array();
+                        String recordStr = new String(GZipUtil.decompressByteArr(dataBytes));
+                        System.out.println("record: " + recordStr);
+                    }
+                    System.out.println("getRecordsResult - recordList.size:  " + getRecordsResult.getRecords().size() + ", nextShardIterator: " + getRecordsResult.getNextShardIterator());
                     break;
                 }
-                default:{
-                    throw new ArgumentParserException("Unknown action "+action, parser);
+                default: {
+                    throw new ArgumentParserException("Unknown action " + action, parser);
                 }
             }
         } catch (ArgumentParserException e) {
