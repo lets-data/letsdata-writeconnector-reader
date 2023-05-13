@@ -1,7 +1,7 @@
 # letsdata-writeconnector-reader
 
 ## About
-Sample code to access the write connector data by assuming the customerAccessRole which is granted by #Let's Data. This is needed when write connector resource location is #Let's Data.  See https://letsdata.io/docs#accessgrants (Granting Customer Access to #Let's Data Resources) for details
+Sample code to access the write connector data by assuming the customerAccessRole which is granted by #Let's Data. This is needed when write connector resource location is #Let's Data.  See https://www.letsdata.io/docs#customeraccountforaccess (Granting Customer Access to #Let's Data Resources) for details
 
 ## Details
 The #Let's Data datasets write output records to a write destination and error records to an error destination. These write and error destinations can be:
