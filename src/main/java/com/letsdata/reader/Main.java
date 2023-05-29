@@ -19,15 +19,16 @@ import java.util.zip.GZIPOutputStream;
 
 public class Main {
 
-    // $ > letsdatawriteconnector listShards --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey'
-    // $ > letsdatawriteconnector getShardIterator --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardId 'shardId'
-    // $ > letsdatawriteconnector getRecords --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardIterator 'shardIterator'
+    // $ > letsdatawriteconnector listShards --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey'
+    // $ > letsdatawriteconnector getShardIterator --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardId 'shardId'
+    // $ > letsdatawriteconnector getRecords --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardIterator 'shardIterator'
     public static void main(String[] args) {
         ArgumentParser parser = ArgumentParsers.newFor("letsdatawriteconnector").build();
         parser.addArgument("action").choices("listShards", "getShardIterator", "getRecords").required(true).help("The kinesis client api method that needs to be called. [\"listShards\", \"getShardIterator\", \"getRecords\"]");
         parser.addArgument("--awsRegion").required(false).type(String.class).help("The awsRegion - default to us-east-1").setDefault("us-east-1");
         parser.addArgument("--awsAccessKeyId").required(true).type(String.class).help("The awsAccessKeyId for the customerAccountForAccess for the dataset");
         parser.addArgument("--customerAccessRoleArn").required(true).type(String.class).help("The customerAccessRoleArn from the dataset that has the been granted the access to the write connector");
+        parser.addArgument("--externalId").required(true).type(String.class).help("The externalId for the sts assumeRole. This is the dataset createDatetime.");
         parser.addArgument("--awsSecretKey").required(true).type(String.class).help("The awsSecretKey for the customerAccountForAccess for the dataset");
         parser.addArgument("--streamName").required(true).type(String.class).help("The kinesis stream name");
         parser.addArgument("--shardId").required(false).type(String.class).help("The shardId for the getShardIterator call");
@@ -44,6 +45,7 @@ public class Main {
             String region = namespace.getString("awsRegion");
             String streamName = namespace.getString("streamName");
             String customerAccessRoleArn = namespace.getString("customerAccessRoleArn");
+            String externalId = namespace.getString("externalId");
             STSUtil stsUtil = new STSUtil(region, namespace.getString("awsAccessKeyId"), namespace.getString("awsSecretKey"));
             String roleAccessPolicyText = "{\n" +
                     "    \"Version\": \"2012-10-17\",\n" +
@@ -65,7 +67,7 @@ public class Main {
                     "}";
 
             String roleSessionName = streamName + System.currentTimeMillis();
-            KinesisReader kinesisReader = new KinesisReader(region, stsUtil, customerAccessRoleArn, roleAccessPolicyText, roleSessionName, null);
+            KinesisReader kinesisReader = new KinesisReader(region, stsUtil, customerAccessRoleArn, externalId, roleAccessPolicyText, roleSessionName, null);
             switch (action) {
                 case "listShards": {
                     List<Shard> shardList = kinesisReader.listShards(streamName, null, null);

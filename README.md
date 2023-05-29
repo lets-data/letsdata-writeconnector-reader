@@ -11,7 +11,7 @@ The #Let's Data datasets write output records to a write destination and error r
 
 When these error and write destinations are in the customer's account, accessing the output and error records is simple - the customer can use their credentials with the AWS API and access the records.
 
-However, when these error and write destinations are located in the #Let's Data AWS account, the #Let's Data initialization workflow will grant the customer account access to these error and write detinations via an IAM role. This IAM role is listed in the dataset json as the 'customerAccessRoleArn' attribute:
+However, when these error and write destinations are located in the #Let's Data AWS account, the #Let's Data initialization workflow will grant the customer account access to these error and write detinations via an IAM role. This IAM role is listed in the dataset json as the 'customerAccessRoleArn' attribute. We'll also need the dataset's createDatetime which is set as the externalId (contextId) for the sts:assumeRole call:
 ```
 {
     "datasetName": "ExtractTargetUri1222202216",
@@ -19,7 +19,8 @@ However, when these error and write destinations are located in the #Let's Data 
     "customerAccountForAccess": "308240606591",
 
     "customerAccessRoleArn": "arn:aws:iam::223413462631:role/TestCustomerAccess24d29d89b4a2eedc6988cfa17a2c3d81IAMRole",
-
+    "createDatetime": 1685331931671,
+    
     "readConnector": {
       "readerType": "SINGLEFILEREADER",
       "bucketName": "commoncrawl",
@@ -30,7 +31,7 @@ However, when these error and write destinations are located in the #Let's Data 
 
 Here is how this module accesses the data using the customerAccessRoleArn:
 
-* Use AWS SecurityTokenService (AWS STS)'s assumeRole API to get access credentials to the resources. In this case, the customer code is running as the customer's aws account which would then assume the 'customerAccessRoleArn' IAM role. There is one caveat, assumeRole API can assume roles only when running as an IAM user (not as a root account). If the customer code is running as the root account, the assumeRole API will return an error. The simple fix is to create an IAM User and grant it assumeRole access. (We've granted these IAM users AdministratorAccess and that seems to work fine).
+* Use AWS SecurityTokenService (AWS STS)'s assumeRole API to get access credentials to the resources. In this case, the customer code is running as the customer's aws account which would then assume the 'customerAccessRoleArn' IAM role. There is one caveat, assumeRole API can assume roles only when running as an IAM user (not as a root account). If the customer code is running as the root account, the assumeRole API will return an error. The simple fix is to create an IAM User and grant it assumeRole access. (We've granted these IAM users AdministratorAccess and that seems to work fine). To follow the AWS security best practices, we've also added an additional externalId (contextId) in the sts:assumeRole call to disallow access in from unknown contexts. Currently, the dataset's createDatetime is set as the externalId.  
 * Call the write / error destination APIs to get the data using these access credentials. The stream details such as streamName and the error bucketName are in the dataset json.
 
 Here are details for each of these steps - STS assumeRole API, Kinesis Reader, S3 Reader, IAM User with AdministratorAccess and the cli driver Main class. You can view these code examples in entirety at these github repos. S3 Reader, Kinesis Reader.
@@ -70,11 +71,11 @@ $ > cd src/bin
 # awsAccessKeyId and awsSecretKey are the security credentials of an IAM User in the customer AWS account. This is the customer AWS account that was granted access. In case this is a root account, you can create an IAM user. See the "IAM User With AdministratorAccess" section above.
 
 # Given a streamName, list shards for the stream
-$ > letsdatawriteconnector.sh listShards --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey'
+$ > letsdatawriteconnector.sh listShards --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey'
 
 # Given a shardId, get the Shard Iterator
-$ > letsdatawriteconnector.sh getShardIterator --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardId 'shardId'
+$ > letsdatawriteconnector.sh getShardIterator --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardId 'shardId'
 
 # Given a shardIterator, get the records from the stream
-$ > letsdatawriteconnector.sh getRecords --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardIterator 'shardIterator'
+$ > letsdatawriteconnector.sh getRecords --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --externalId 'externalId' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardIterator 'shardIterator'
 ```

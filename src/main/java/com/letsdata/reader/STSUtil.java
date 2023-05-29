@@ -36,8 +36,8 @@ public class STSUtil {
                 build();
     }
 
-    public AssumeRoleResult assumeRole(String roleArn, String policy, String roleSessionName, List<String> managedPolicyArnList) {
-        AssumeRoleRequest request = new AssumeRoleRequest().withRoleArn(roleArn).withPolicy(policy).withRoleSessionName(roleSessionName);
+    public AssumeRoleResult assumeRole(String roleArn, String externalId, String policy, String roleSessionName, List<String> managedPolicyArnList) {
+        AssumeRoleRequest request = new AssumeRoleRequest().withRoleArn(roleArn).withPolicy(policy).withRoleSessionName(roleSessionName).withExternalId(externalId);
 
         if (managedPolicyArnList != null && !managedPolicyArnList.isEmpty()) {
             List<PolicyDescriptorType> policyDescriptorTypeList = new ArrayList<>();

@@ -21,13 +21,15 @@ public class KinesisReader {
     private final STSUtil stsUtil;
     private final AmazonKinesis amazonKinesis;
     private final String roleArn;
+    private final String externalId;
     private final String roleAccessPolicyText;
     private final String roleSessionName;
     private final List<String> managedPolicyArnList;
 
-    public KinesisReader(String region, STSUtil stsUtil, String roleArn, String roleAccessPolicyText, String roleSessionName, List<String> managedPolicyArnList) {
+    public KinesisReader(String region, STSUtil stsUtil, String roleArn, String externalId, String roleAccessPolicyText, String roleSessionName, List<String> managedPolicyArnList) {
         this.stsUtil = stsUtil;
         this.roleArn = roleArn;
+        this.externalId = externalId;
         this.roleAccessPolicyText = roleAccessPolicyText;
         this.roleSessionName = roleSessionName;
         this.managedPolicyArnList = managedPolicyArnList;
@@ -67,7 +69,7 @@ public class KinesisReader {
 
                     @Override
                     public void refresh() {
-                        AssumeRoleResult stsAssumeRoleResult = stsUtil.assumeRole(roleArn, roleAccessPolicyText, roleSessionName,  managedPolicyArnList);
+                        AssumeRoleResult stsAssumeRoleResult = stsUtil.assumeRole(roleArn, externalId, roleAccessPolicyText, roleSessionName,  managedPolicyArnList);
                         this.credentials = stsAssumeRoleResult.getCredentials();
                     }
                 }).
