@@ -1,5 +1,6 @@
 package com.letsdata.reader;
 
+import com.amazonaws.arn.Arn;
 import com.amazonaws.services.kinesis.model.GetRecordsResult;
 import com.amazonaws.services.kinesis.model.Record;
 import com.amazonaws.services.kinesis.model.Shard;
@@ -47,6 +48,7 @@ public class Main {
             String customerAccessRoleArn = namespace.getString("customerAccessRoleArn");
             String externalId = namespace.getString("externalId");
             STSUtil stsUtil = new STSUtil(region, namespace.getString("awsAccessKeyId"), namespace.getString("awsSecretKey"));
+            String letsDataAwsAccountId = Arn.fromString(customerAccessRoleArn).getAccountId();
             String roleAccessPolicyText = "{\n" +
                     "    \"Version\": \"2012-10-17\",\n" +
                     "    \"Statement\": [\n" +
@@ -56,7 +58,7 @@ public class Main {
                     "                \"kinesis:GetShardIterator\",\n" +
                     "                \"kinesis:GetRecords\"\n" +
                     "            ],\n" +
-                    "            \"Resource\": \"arn:aws:kinesis:" + region + ":223413462631:stream/" + streamName + "\"\n" +
+                    "            \"Resource\": \"arn:aws:kinesis:" + region + ":"+letsDataAwsAccountId+":stream/" + streamName + "\"\n" +
                     "        },\n" +
                     "        {\n" +
                     "            \"Effect\": \"Allow\",\n" +
