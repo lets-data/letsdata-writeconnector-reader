@@ -43,8 +43,13 @@ Implemented in ```STSUtil.java```
 
 ### Kinesis Reader
 * Create a Kinesis Client using the STS Assume Role utility from the previous step
-* Use the Kinesis clent to describeStreams, listShards, getShardIterator and getRecords
+* Use the Kinesis client to describeStreams, listShards, getShardIterator and getRecords
 Implemented in ```KinesisReader.java```
+
+### Kafka Reader
+* Create a Kafka Consumer using the `aws-msk-iam-auth` library for auth
+* Use the Kafka client to listTopics, assignTopicPartitions, listAssignments, pollTopic, commitPolledRecords, topicPartitionPositions, listSubscriptions, subscribeTopic
+  Implemented in ```KafkaReader.java```
 
 ### IAM User With AdministratorAccess
 The assumeRole API is disallowed for root accounts. The simple fix is to create an IAM User and grant it assumeRole access. (We'll grant these IAM users AdministratorAccess). Then use this user's security credentials in the cli commands.
@@ -62,7 +67,8 @@ $ > aws iam attach-user-policy --policy-arn arn:aws:iam:<ACCOUNT-ID>:aws:policy/
 $ > cd <github project root>
 $ > mvn clean compile assembly:single 
 ```
-* Run the ```letsdatawriteconnector.sh``` file in the bin folder. You may need to update the jar path as needed. 
+### Kinesis
+* Run the ```kinesis_reader.sh``` file in the bin folder. You may need to update the jar path as needed. 
 * The CLI driver code (```Main.java```) uses the Kinesis Reader and the STS Util from earlier to implement the following CLI commands:
 ```
 # cd into the bin directory
@@ -71,11 +77,50 @@ $ > cd src/bin
 # awsAccessKeyId and awsSecretKey are the security credentials of an IAM User in the customer AWS account. This is the customer AWS account that was granted access. In case this is a root account, you can create an IAM user. See the "IAM User With AdministratorAccess" section above.
 
 # Given a streamName, list shards for the stream
-$ > letsdatawriteconnector.sh listShards --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey'
+$ > kinesis_reader.sh listShards --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey'
 
 # Given a shardId, get the Shard Iterator
-$ > letsdatawriteconnector.sh getShardIterator --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardId 'shardId'
+$ > kinesis_reader.sh getShardIterator --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardId 'shardId'
 
 # Given a shardIterator, get the records from the stream
-$ > letsdatawriteconnector.sh getRecords --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --externalId 'externalId' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardIterator 'shardIterator'
+$ > kinesis_reader.sh getRecords --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --awsRegion 'awsRegion' --externalId 'externalId' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardIterator 'shardIterator'
+```
+### Kafka
+* Run the ```kafka_reader.sh``` file in the bin folder. You may need to update the jar path as needed.
+* The CLI driver code (```KafkaMain.java```) uses the Kafka Reader to implement the following CLI commands:
+```
+# cd into the bin directory
+$ > cd src/bin
+
+# awsAccessKeyId and awsSecretKey are the security credentials of an IAM User in the customer AWS account. This is the customer AWS account that was granted access. In case this is a root account, you can create an IAM user. See the "IAM User With AdministratorAccess" section above.
+
+# Connect a Kafka Consumer to the Kafka Cluster using aws-msk-iam-auth library
+$ > kafka_reader --clusterArn 'clusterArn' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --topicName 'topicName'
+
+> Enter the kafka consumer method to invoke. ["listTopics", "listSubscriptions", "subscribeTopic", "pollTopic", "commitPolledRecords", "topicPartitionPositions","assignTopicPartitions", "listAssignments","quit"]
+listTopics
+{commoncrawl1}
+
+> Enter the kafka consumer method to invoke. ["listTopics", "listSubscriptions", "subscribeTopic", "pollTopic", "commitPolledRecords", "topicPartitionPositions","assignTopicPartitions", "listAssignments","quit"]
+assignTopicPartitions
+
+> Enter the kafka consumer method to invoke. ["listTopics", "listSubscriptions", "subscribeTopic", "pollTopic", "commitPolledRecords", "topicPartitionPositions","assignTopicPartitions", "listAssignments","quit"]
+topicPartitionPositions
+{commoncrawl1={0=0, 1=0, 2=0, 3=0, 4=0}}
+
+> Enter the kafka consumer method to invoke. ["listTopics", "listSubscriptions", "subscribeTopic", "pollTopic", "commitPolledRecords", "topicPartitionPositions","assignTopicPartitions", "listAssignments","quit"]
+pollTopic
+...
+...
+...
+
+> Enter the kafka consumer method to invoke. ["listTopics", "listSubscriptions", "subscribeTopic", "pollTopic", "commitPolledRecords", "topicPartitionPositions","assignTopicPartitions", "listAssignments","quit"]
+commitPolledRecords
+
+> Enter the kafka consumer method to invoke. ["listTopics", "listSubscriptions", "subscribeTopic", "pollTopic", "commitPolledRecords", "topicPartitionPositions","assignTopicPartitions", "listAssignments","quit"]
+topicPartitionPositions
+{commoncrawl1={0=179, 1=424, 2=249, 3=185, 4=233}}
+
+> Enter the kafka consumer method to invoke. ["listTopics", "listSubscriptions", "subscribeTopic", "pollTopic", "commitPolledRecords", "topicPartitionPositions","assignTopicPartitions", "listAssignments","quit"]
+quit
 ```

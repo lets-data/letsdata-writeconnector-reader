@@ -20,9 +20,9 @@ import java.util.zip.GZIPOutputStream;
 
 public class Main {
 
-    // $ > letsdatawriteconnector listShards --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey'
-    // $ > letsdatawriteconnector getShardIterator --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardId 'shardId'
-    // $ > letsdatawriteconnector getRecords --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardIterator 'shardIterator'
+    // $ > kinesis_reader listShards --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey'
+    // $ > kinesis_reader getShardIterator --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardId 'shardId'
+    // $ > kinesis_reader getRecords --streamName 'streamName' --customerAccessRoleArn 'customerAccessRoleArn' --externalId 'externalId' --awsRegion 'awsRegion' --awsAccessKeyId 'awsAccessKeyId' --awsSecretKey 'awsSecretKey' --shardIterator 'shardIterator'
     public static void main(String[] args) {
         ArgumentParser parser = ArgumentParsers.newFor("letsdatawriteconnector").build();
         parser.addArgument("action").choices("listShards", "getShardIterator", "getRecords").required(true).help("The kinesis client api method that needs to be called. [\"listShards\", \"getShardIterator\", \"getRecords\"]");
