@@ -31,8 +31,9 @@ However, when these error and write destinations are located in the #Let's Data 
 
 Here is how this module accesses the data using the customerAccessRoleArn:
 
-* Use AWS SecurityTokenService (AWS STS)'s assumeRole API to get access credentials to the resources. In this case, the customer code is running as the customer's aws account which would then assume the 'customerAccessRoleArn' IAM role. There is one caveat, assumeRole API can assume roles only when running as an IAM user (not as a root account). If the customer code is running as the root account, the assumeRole API will return an error. The simple fix is to create an IAM User and grant it assumeRole access. (We've granted these IAM users AdministratorAccess and that seems to work fine). To follow the AWS security best practices, we've also added an additional externalId (contextId) in the sts:assumeRole call to disallow access in from unknown contexts. Currently, the dataset's createDatetime is set as the externalId.  
+* Use AWS SecurityTokenService (AWS STS)'s assumeRole API to get access credentials to the resources. In this case, the customer code is running as the customer's aws account which would then assume the 'customerAccessRoleArn' IAM role. There is one caveat, assumeRole API can assume roles only when running as an IAM user (not as a root account). If the customer code is running as the root account, the assumeRole API will return an error. The simple fix is to create an IAM User and grant it assumeRole access. (We've granted these IAM users AdministratorAccess and that seems to work fine). To follow the AWS security best practices, we've also added an additional externalId (contextId) in the sts:assumeRole call to disallow access in from unknown contexts. Currently, the dataset's createDatetime is set as the externalId.
 * Call the write / error destination APIs to get the data using these access credentials. The stream details such as streamName and the error bucketName are in the dataset json.
+* A sample implementation of the STS assume role is in the STSUtil.java - this can be used for the Kinesis and S3 destinations. For the Kafka destination, we use the AWS's aws-msk-iam-auth library which uses the same methodology to connect securely to the Kafka cluster. We did make a private fix to this library - you'll need to download our custom version of the jar to access Kafka Cluster. For those interested, issue https://github.com/aws/aws-msk-iam-auth/issues/128 has the details and the fix that we made
 
 Here are details for each of these steps - STS assumeRole API, Kinesis Reader, S3 Reader, IAM User with AdministratorAccess and the cli driver Main class. You can view these code examples in entirety at these github repos. S3 Reader, Kinesis Reader.
 
@@ -64,6 +65,13 @@ $ > aws iam attach-user-policy --policy-arn arn:aws:iam:<ACCOUNT-ID>:aws:policy/
 ## How to Run this Code
 * Build the jar by using the following maven commands - this should create a ```letsdata-writeconnector-reader-1.0-SNAPSHOT-jar-with-dependencies.jar``` in the target folder:
 ```
+#download the aws-msk-iam-auth custom jar
+$ > curl -o aws-msk-iam-auth-1.1.7-letsdata-custom.jar https://d108vtfcfy7u5c.cloudfront.net/downloads/aws-msk-iam-auth-1.1.7-letsdata-custom.jar
+
+# install the aws-msk-iam-auth-1.1.7-letsdata-custom.jar JAR in the maven repo - update the downloaded path as needed
+mvn -e install:install-file -Dfile=aws-msk-iam-auth-1.1.7-letsdata-custom.jar -DgroupId=software.amazon.msk -DartifactId=aws-msk-iam-auth -Dpackaging=jar -Dversion=1.1.7-letsdata-custom
+
+# build the project
 $ > cd <github project root>
 $ > mvn clean compile assembly:single 
 ```
